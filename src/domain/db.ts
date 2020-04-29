@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { User, UserModel } from './User';
+import { User, UserModel } from '../models/User';
 
 export class DB {
   constructor() {}

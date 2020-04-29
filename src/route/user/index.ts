@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { User } from '../../models/User';
-import { DB } from '../../models/db';
+import { DB } from '../../domain/db';
 
 const router = Router();
 const db = new DB();
