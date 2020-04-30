@@ -8,10 +8,15 @@ export interface JoinInfo {
   train: string;
 }
 
+export interface User {
+  ready: boolean,
+  name: string
+}
+
 export interface TrainRoom {
   [key: string]: Room
 }
 
 export interface Room {
-  [key: string]: [string]
+  [key: string]: [User]
 }

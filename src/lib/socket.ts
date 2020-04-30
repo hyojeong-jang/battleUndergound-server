@@ -1,4 +1,4 @@
-import { Message, JoinInfo, TrainRoom, Room } from '../domain/socket';
+import { Message, JoinInfo, TrainRoom, Room, User } from '../domain/socket';
 
 let trainRoom: TrainRoom = {};
 let room: Room = {};
@@ -9,40 +9,44 @@ export const socket = (io: any) => {
   io.on('connection', (socket: any) => {
     console.log('socket connected');
 
-    let rooms = Object.keys(socket.rooms);
-    console.log(rooms);
-
     socket.on('connected', (train_id: string) => {
       for (const train in trainRoom) {
-        if (train === train_id) {
-          return socket.emit('roomCheck', trainRoom[train_id]);
-        }
+        if (train === train_id) return;
       }
-
       trainRoom[train_id] = room;
-      socket.emit('roomCheck', null);
     })
 
     socket.on('joinRoom', (joinInfo: JoinInfo) => {
       const randomString: string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 8);
+      const user: User = { ready: false, name: joinInfo.nickname };
       const userTrain = trainRoom[joinInfo.train];
 
       for (const room in userTrain) {
         if (userTrain[room].length === 1) {
-          userTrain[room].push(joinInfo.nickname);
-          console.log('in', room, 'room');
+          userTrain[room].push(user);
           socket.join(room);
-          return io.emit('joined', 'full');
+          return io.emit('joined', userTrain[room], room);
         }
       }
-      userTrain[randomString] = [joinInfo.nickname];
+      userTrain[randomString] = [user];
       socket.join(randomString);
-      io.emit('joined', 'createRoom');
+      io.emit('joined', [user], randomString);
     })
 
     socket.on('message', (message: Message) => {
       io.emit('message', JSON.stringify(message));
     });
+
+    socket.on('onReady', (userInfo: JoinInfo, roomId: string) => {
+      const userTrain = trainRoom[userInfo.train];
+      const userRoom = userTrain[roomId];
+      userRoom.forEach(user => {
+        if (user.name === userInfo.nickname) {
+          user.ready = !user.ready
+        }
+      })
+      return io.emit('readyStatus', userRoom);
+    })
   });
 }
 
