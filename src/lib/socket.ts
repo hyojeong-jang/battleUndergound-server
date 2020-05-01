@@ -1,7 +1,8 @@
-import { Message, JoinInfo, TrainRoom, Room, User } from '../domain/socket';
+import { Message, JoinInfo, TrainRoom, Room, User, Info, Chat} from '../domain/socket';
 
-let trainRoom: TrainRoom = {};
-let room: Room = {};
+const trainRoom: TrainRoom = {};
+const room: Room = {};
+const chat: Chat = {};
 
 export const socket = (io: any) => {
   console.log('socket on & disconnected');
@@ -33,19 +34,29 @@ export const socket = (io: any) => {
       io.emit('joined', [user], randomString);
     })
 
-    socket.on('message', (message: Message) => {
-      io.emit('message', JSON.stringify(message));
+    socket.on('message', (room: string, message: Message) => {
+      if (chat[room]) {
+        chat[room].push(message);
+        io.emit('messageList', chat[room]);
+      } else {
+        chat[room] = [message];
+      }
     });
 
     socket.on('onReady', (userInfo: JoinInfo, roomId: string) => {
       const userTrain = trainRoom[userInfo.train];
       const userRoom = userTrain[roomId];
+
       userRoom.forEach(user => {
         if (user.name === userInfo.nickname) {
           user.ready = !user.ready
         }
       })
       return io.emit('readyStatus', userRoom);
+    })
+
+    socket.on('initialInfo', (initialInfo: Info) => {
+      console.log(initialInfo)
     })
   });
 }

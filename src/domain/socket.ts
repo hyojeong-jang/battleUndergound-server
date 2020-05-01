@@ -1,6 +1,10 @@
 export interface Message {
-  username: string;
+  nickname: string;
   content:  string;
+}
+
+export interface Chat {
+  [key: string]: [Message]
 }
 
 export interface JoinInfo {
@@ -19,4 +23,14 @@ export interface TrainRoom {
 
 export interface Room {
   [key: string]: [User]
+}
+
+export interface Info {
+  name: string,
+  turn: boolean,
+  selectedBox: [string],
+  userSelected: [string],
+  winner: string | null,
+  score: number | null,
+  station: string
 }
