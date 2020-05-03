@@ -28,9 +28,14 @@ export interface Room {
 export interface Info {
   name: string,
   turn: boolean,
-  selectedBox: [string],
-  userSelected: [string],
-  winner: string | null,
-  score: number | null,
-  station: string
+  selectBox: string,
+  selectedBoxes?: [string],
+  winner?: string | null,
+  score?: number | null,
+  station?: string,
+  room: string
+}
+
+export interface GameStatus {
+  [key: string]: [Info]
 }

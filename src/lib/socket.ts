@@ -1,8 +1,10 @@
-import { Message, JoinInfo, TrainRoom, Room, User, Info, Chat} from '../domain/socket';
+import { Message, JoinInfo, TrainRoom, Room, User, Info, Chat, GameStatus } from '../domain/socket';
 
 const trainRoom: TrainRoom = {};
 const room: Room = {};
 const chat: Chat = {};
+
+let gameStatus: GameStatus = {};
 
 export const socket = (io: any) => {
   console.log('socket on & disconnected');
@@ -15,7 +17,7 @@ export const socket = (io: any) => {
         if (train === train_id) return;
       }
       trainRoom[train_id] = room;
-    })
+    });
 
     socket.on('joinRoom', (joinInfo: JoinInfo) => {
       const randomString: string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 8);
@@ -29,10 +31,11 @@ export const socket = (io: any) => {
           return io.emit('joined', userTrain[room], room);
         }
       }
+
       userTrain[randomString] = [user];
       socket.join(randomString);
       io.emit('joined', [user], randomString);
-    })
+    });
 
     socket.on('message', (room: string, message: Message) => {
       if (chat[room]) {
@@ -52,12 +55,36 @@ export const socket = (io: any) => {
           user.ready = !user.ready
         }
       })
+
       return io.emit('readyStatus', userRoom);
-    })
+    });
 
     socket.on('initialInfo', (initialInfo: Info) => {
-      console.log(initialInfo)
-    })
+      const room: string = initialInfo.room;
+
+      if (gameStatus.hasOwnProperty(room)) {
+        gameStatus[room].push(initialInfo);
+      } else {
+        gameStatus[room] = [initialInfo];
+      }
+    });
+
+    socket.on('updateGameInfo', (gameInfo: Info) => {
+      const room: string = gameInfo.room;
+
+      gameStatus[room].forEach((userStatus) => {
+        if (userStatus.name === gameInfo.name) {
+          userStatus.selectBox = gameInfo.selectBox;
+          userStatus.selectedBoxes?.push(gameInfo.selectBox);
+          userStatus.turn = gameInfo.turn;
+        } else {
+          userStatus.turn = !gameInfo.turn;
+        }
+      })
+
+      console.log(gameStatus[room], 'game status!')
+      return io.emit('gameStatus', gameStatus[room]);
+    });
   });
 }
 
