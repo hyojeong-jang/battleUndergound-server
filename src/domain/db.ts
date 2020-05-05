@@ -3,16 +3,16 @@ import { User, UserModel } from '../models/User';
 
 export class DB {
   constructor() {}
-  read(query: any): mongoose.DocumentQuery<User[], User> {
-    return UserModel.find(query);
+  read(): mongoose.DocumentQuery<User[], User> {
+    return UserModel.find().sort({ game_score: -1 }).limit(5);
   }
 
   create(user: User): Promise<User> {
-    let u = new UserModel(user);
-    return u.save();
+    let userModel = new UserModel(user);
+    return userModel.save();
   }
 
-  // update(user: User): mongoose.Query<number> {
-  //   return UserModel.update({ game_score: user.game_score }, {...user})
-  // }
+  update(id: string, gameScore: number) {
+    return UserModel.findByIdAndUpdate(id, { game_score: gameScore });
+  }
 }

@@ -30,12 +30,20 @@ export interface Info {
   turn: boolean,
   selectBox: string,
   selectedBoxes?: [string],
-  winner?: string | null,
-  score?: number | null,
+  winner?: boolean | string,
+  gameScore?: number | null,
   station?: string,
   room: string
 }
 
 export interface GameStatus {
   [key: string]: [Info]
+}
+
+export interface Result {
+  room: string,
+  result: string,
+  user?: string,
+  gameScore: number,
+  id: string
 }

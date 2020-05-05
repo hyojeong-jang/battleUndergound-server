@@ -1,4 +1,7 @@
-import { Message, JoinInfo, TrainRoom, Room, User, Info, Chat, GameStatus } from '../domain/socket';
+import { Message, JoinInfo, TrainRoom, Room, User, Info, Chat, GameStatus, Result } from '../domain/socket';
+import { DB } from '../domain/db';
+
+const db = new DB();
 
 const trainRoom: TrainRoom = {};
 const room: Room = {};
@@ -82,8 +85,37 @@ export const socket = (io: any) => {
         }
       })
 
-      console.log(gameStatus[room], 'game status!')
-      return io.emit('gameStatus', gameStatus[room]);
+      return io.in(room).emit('gameStatus', gameStatus[room]);
+    });
+
+    socket.on('gameResult', async (result: Result) => {
+      const room: string = result.room;
+      let gameInfo;
+
+      await db.update(result.id, result.gameScore);
+      const topRankList = await db.read();
+
+      if (result.result === 'draw') {
+        gameStatus[room].forEach((userStatus) => {
+          userStatus.winner = 'none'
+          if (userStatus.name === result.user) {
+            gameInfo = userStatus;
+          }
+        })
+      } else if (result.result === 'win') {
+        gameStatus[room].forEach((userStatus) => {
+          if (userStatus.name === result.user) {
+            userStatus.winner = true;
+            userStatus.gameScore = result.gameScore;
+            gameInfo = userStatus;
+          } else {
+            userStatus.winner = false;
+            gameInfo = userStatus;
+          }
+        })
+      }
+      console.log(gameInfo)
+      return io.in(room).emit('updatedGameResult', topRankList, gameInfo);
     });
   });
 }
