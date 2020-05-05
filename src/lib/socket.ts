@@ -90,7 +90,6 @@ export const socket = (io: any) => {
 
     socket.on('gameResult', async (result: Result) => {
       const room: string = result.room;
-      let gameInfo;
 
       await db.update(result.id, result.gameScore);
       const topRankList = await db.read();
@@ -98,24 +97,18 @@ export const socket = (io: any) => {
       if (result.result === 'draw') {
         gameStatus[room].forEach((userStatus) => {
           userStatus.winner = 'none'
-          if (userStatus.name === result.user) {
-            gameInfo = userStatus;
-          }
         })
       } else if (result.result === 'win') {
         gameStatus[room].forEach((userStatus) => {
           if (userStatus.name === result.user) {
             userStatus.winner = true;
             userStatus.gameScore = result.gameScore;
-            gameInfo = userStatus;
           } else {
             userStatus.winner = false;
-            gameInfo = userStatus;
           }
         })
       }
-      console.log(gameInfo)
-      return io.in(room).emit('updatedGameResult', topRankList, gameInfo);
+      return io.in(room).emit('updatedGameResult', topRankList, gameStatus[room]);
     });
   });
 }
