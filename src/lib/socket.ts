@@ -10,16 +10,13 @@ const chat: Chat = {};
 let gameStatus: GameStatus = {};
 
 export const socket = (io: any) => {
-  console.log('socket on & disconnected');
-
   io.on('connection', (socket: any) => {
-    console.log('socket connected');
-
     socket.on('connected', (train_id: string) => {
       for (const train in trainRoom) {
         if (train === train_id) return;
       }
-      trainRoom[train_id] = room;
+      trainRoom[train_id] = {};
+      socket.emit('connected', train_id);
     });
 
     socket.on('joinRoom', (joinInfo: JoinInfo) => {
@@ -31,13 +28,14 @@ export const socket = (io: any) => {
         if (userTrain[room].length === 1) {
           userTrain[room].push(user);
           socket.join(room);
-          return io.emit('joined', userTrain[room], room);
+
+          return io.in(room).emit('joined', userTrain[room], room);
         }
       }
 
       userTrain[randomString] = [user];
       socket.join(randomString);
-      io.emit('joined', [user], randomString);
+      io.in(randomString).emit('joined', [user], randomString);
     });
 
     socket.on('message', (room: string, message: Message) => {
@@ -91,12 +89,12 @@ export const socket = (io: any) => {
     socket.on('gameResult', async (result: Result) => {
       const room: string = result.room;
 
-      await db.update(result.id, result.gameScore);
+      await db.updateGameScore(result.id, result.gameScore);
       const topRankList = await db.read();
 
       if (result.result === 'draw') {
         gameStatus[room].forEach((userStatus) => {
-          userStatus.winner = 'none'
+          userStatus.winner = 'draw'
         })
       } else if (result.result === 'win') {
         gameStatus[room].forEach((userStatus) => {
@@ -110,6 +108,10 @@ export const socket = (io: any) => {
       }
       return io.in(room).emit('updatedGameResult', topRankList, gameStatus[room]);
     });
+
+    socket.on('closeGameRoom', (roomId: string) => {
+      socket.disconnect(true);
+      delete room[roomId];
+    })
   });
 }
-

@@ -16,8 +16,20 @@ router.post('/:user_id', async (req: Request , res: Response) => {
   };
 
   try {
-    const user = await db.create(userInfo);
-    res.json({ user });
+    const userDocument = await db.create(userInfo);
+    res.json({ userDocument });
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+router.put('/:user_id', async (req: Request, res: Response) => {
+  const { user_id } = req.params;
+  const nickname = req.body.data;
+
+  try {
+    const userDocument = await db.updateNickname(user_id, nickname);
+    res.json({ userDocument });
   } catch (error) {
     console.log(error);
   }

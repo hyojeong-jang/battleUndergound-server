@@ -28,8 +28,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/api', router);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log('~')
-  // next(createError(404, 'Invalid Url'));
+  next(createError(404, 'Invalid Url'));
 });
 
 app.use((err: HttpError, req: Request, res: Response, next: NextFunction) => {
